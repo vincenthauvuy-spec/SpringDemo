@@ -1,0 +1,58 @@
+package com.vincent.demo.unit;
+
+import com.vincent.demo.TestUtils;
+import com.vincent.demo.model.AppUser;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+public class AppUserUnitTest {
+
+    protected static Validator validator;
+
+    @BeforeAll
+    public static void init() {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
+    }
+
+    @Test
+    public void createUserWithUpperCasePseudo_shouldPseudoBeLowerCase() {
+        AppUser user = new AppUser();
+        user.setPseudo("NOUVel UtilisaTeur");
+
+        Assertions.assertEquals("nouvel utilisateur", user.getPseudo());
+    }
+
+    @Test
+    public void validUserWithBlankEmail_shouldNotBeValid() {
+        AppUser user = new AppUser();
+        user.setEmail("");
+
+        //On simule la validation via @Validated(AppUser.OnCreate.class)
+        //cad lors de la transformation du JSON en classe Java lors du PostMapping
+        boolean constraintExist = TestUtils.constraintViolationExist(
+                validator.validate(user, AppUser.OnCreate.class),
+                "email",
+                "NotBlank");
+
+        Assertions.assertTrue(constraintExist, "La contrainte NotBlank sur email n'a pas fonctionné");
+    }
+
+
+    @Test
+    public void validUserWithNotWellFormattedEmail_shouldNotBeValid() {
+        AppUser user = new AppUser();
+        user.setEmail("a.com");
+
+        //On simule la validation via @Validated(AppUser.OnCreate.class)
+        //cad lors de la transformation du JSON en classe Java lors du PostMapping
+        boolean constraintExist = TestUtils.constraintViolationExist(
+                validator.validate(user, AppUser.OnCreate.class),
+                "email",
+                "Email");
+
+        Assertions.assertTrue(constraintExist, "La contrainte NotBlank sur email n'a pas fonctionné");
+    }
+}
